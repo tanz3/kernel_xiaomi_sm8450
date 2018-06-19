@@ -153,6 +153,10 @@ core-y		+= arch/arm64/
 libs-y		:= arch/arm64/lib/ $(libs-y)
 libs-$(CONFIG_EFI_STUB) += $(objtree)/drivers/firmware/efi/libstub/lib.a
 
+ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
+KBUILD_TARGET   += dtbo.img
+endif
+
 # Default target when executing plain make
 boot		:= arch/arm64/boot
 KBUILD_IMAGE	:= $(boot)/Image.gz
@@ -171,6 +175,11 @@ Image.%: Image
 
 zinstall install:
 	$(Q)$(MAKE) $(build)=$(boot) $@
+
+ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
+dtbo.img: dtbs
+	$(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
+endif
 
 PHONY += vdso_install
 vdso_install:
