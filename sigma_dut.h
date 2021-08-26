@@ -15,6 +15,7 @@
 #endif
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -334,6 +335,7 @@ struct nl80211_ctx {
 	int netlink_familyid;
 	int nlctrl_familyid;
 	size_t sock_buf_size;
+	struct nl_sock *event_sock;
 };
 #endif /* NL80211_SUPPORT */
 
@@ -961,6 +963,8 @@ struct sigma_dut {
 
 	int sta_nss;
 
+	int sta_async_twt_supp; /* Asynchronous TWT response event support */
+
 #ifdef ANDROID
 	int nanservicediscoveryinprogress;
 #endif /* ANDROID */
@@ -989,6 +993,8 @@ struct sigma_dut {
 	int client_privacy_default;
 	int saquery_oci_freq;
 	char device_driver[32];
+	int user_config_ap_ocvc;
+	int user_config_ap_beacon_prot;
 };
 
 
