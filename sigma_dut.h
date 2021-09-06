@@ -88,10 +88,6 @@
 #define ETH_P_ARP 0x0806
 #endif
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(x) (sizeof((x)) / (sizeof(((x)[0]))))
-#endif
-
 #define IPV6_ADDR_LEN 16
 
 struct sigma_dut;
@@ -373,6 +369,7 @@ struct sigma_dut {
 	char *station_ifname_5g;
 	char *p2p_ifname_buf;
 	int use_5g;
+	int ap_band_6g;
 	int sta_2g_started;
 	int sta_5g_started;
 

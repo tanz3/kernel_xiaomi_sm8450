@@ -7231,6 +7231,54 @@ int sta_set_addba_buf_size(struct sigma_dut *dut,
 }
 
 
+static int sta_set_scan_unicast_probe(struct sigma_dut *dut,
+				      const char *intf, int val)
+{
+#ifdef NL80211_SUPPORT
+	return wcn_wifi_test_config_set_u8(
+		dut, intf,
+		QCA_WLAN_VENDOR_ATTR_WIFI_TEST_CONFIG_USE_BSSID_IN_PROBE_REQ_RA,
+		val);
+#else /* NL80211_SUPPORT */
+	sigma_dut_print(dut, DUT_MSG_ERROR,
+			"Unicast RA in Probe Request frame cannot be set without NL80211_SUPPORT defined");
+	return -1;
+#endif /* NL80211_SUPPORT */
+}
+
+
+static int sta_set_rx_ctrl_multi_bss(struct sigma_dut *dut, const char *intf,
+				     int enable)
+{
+#ifdef NL80211_SUPPORT
+	return wcn_wifi_test_config_set_u8(
+		dut, intf,
+		QCA_WLAN_VENDOR_ATTR_WIFI_TEST_CONFIG_RX_CTRL_FRAME_TO_MBSS,
+		enable);
+#else /* NL80211_SUPPORT */
+	sigma_dut_print(dut, DUT_MSG_ERROR,
+			"Rx ctrl frame to Multi-BSS cannot be changed without NL80211_SUPPORT defined");
+	return -1;
+#endif /* NL80211_SUPPORT */
+}
+
+
+static int sta_set_bcast_twt_support(struct sigma_dut *dut, const char *intf,
+				     int enable)
+{
+#ifdef NL80211_SUPPORT
+	return wcn_wifi_test_config_set_u8(
+		dut, intf,
+		QCA_WLAN_VENDOR_ATTR_WIFI_TEST_CONFIG_BCAST_TWT_SUPPORT,
+		enable);
+#else /* NL80211_SUPPORT */
+	sigma_dut_print(dut, DUT_MSG_ERROR,
+			"BCAST TWT cannot be changed without NL80211_SUPPORT defined");
+	return -1;
+#endif /* NL80211_SUPPORT */
+}
+
+
 static int sta_set_tx_beamformee(struct sigma_dut *dut, const char *intf,
 				 int enable)
 {
@@ -7341,6 +7389,36 @@ static int sta_set_mu_edca_override(struct sigma_dut *dut, const char *intf,
 #else /* NL80211_SUPPORT */
 	sigma_dut_print(dut, DUT_MSG_ERROR,
 			"MU EDCA override cannot be changed without NL80211_SUPPORT defined");
+	return -1;
+#endif /* NL80211_SUPPORT */
+}
+
+
+static int sta_set_er_su_ppdu_type_tx(struct sigma_dut *dut, const char *intf,
+				      int val)
+{
+#ifdef NL80211_SUPPORT
+	return wcn_wifi_test_config_set_u8(
+		dut, intf,
+		QCA_WLAN_VENDOR_ATTR_WIFI_TEST_CONFIG_ER_SU_PPDU_TYPE, val);
+#else /* NL80211_SUPPORT */
+	sigma_dut_print(dut, DUT_MSG_ERROR,
+			"ER-SU PPDU type cannot be set without NL80211_SUPPORT defined");
+	return -1;
+#endif /* NL80211_SUPPORT */
+}
+
+
+static int sta_set_ru_242_tone_tx(struct sigma_dut *dut, const char *intf,
+				  int val)
+{
+#ifdef NL80211_SUPPORT
+	return wcn_wifi_test_config_set_u8(
+		dut, intf,
+		QCA_WLAN_VENDOR_ATTR_WIFI_TEST_CONFIG_RU_242_TONE_TX, val);
+#else /* NL80211_SUPPORT */
+	sigma_dut_print(dut, DUT_MSG_ERROR,
+			"RU 242 tone cannot be set without NL80211_SUPPORT defined");
 	return -1;
 #endif /* NL80211_SUPPORT */
 }
@@ -7499,6 +7577,22 @@ static int sta_set_bss_max_idle_period(struct sigma_dut *dut, const char *intf,
 }
 
 
+static int sta_set_bss_max_idle_support(struct sigma_dut *dut, const char *intf,
+					int val)
+{
+#ifdef NL80211_SUPPORT
+	return wcn_wifi_test_config_set_u8(
+		dut, intf,
+		QCA_WLAN_VENDOR_ATTR_WIFI_TEST_CONFIG_BSS_MAX_IDLE_PERIOD_ENABLE,
+		val);
+#else /* NL80211_SUPPORT */
+	sigma_dut_print(dut, DUT_MSG_ERROR,
+			"BSS max idle support cannot be set without NL80211_SUPPORT defined");
+	return -1;
+#endif /* NL80211_SUPPORT */
+}
+
+
 static int sta_set_fullbw_ulmumimo(struct sigma_dut *dut, const char *intf,
 				   int val)
 {
@@ -7567,6 +7661,8 @@ static void sta_reset_default_wcn(struct sigma_dut *dut, const char *intf,
 		if (dut->sta_async_twt_supp == -1)
 			sta_get_twt_feature_async_supp(dut, intf);
 
+		sta_set_scan_unicast_probe(dut, intf, 0);
+
 #ifdef NL80211_SUPPORT
 		/* Reset the device HE capabilities to its default supported
 		 * configuration. */
@@ -7629,6 +7725,16 @@ static void sta_reset_default_wcn(struct sigma_dut *dut, const char *intf,
 		if (sta_set_mu_edca_override(dut, intf, 0)) {
 			sigma_dut_print(dut, DUT_MSG_ERROR,
 					"ErrorCode,Failed to set MU EDCA override disable");
+		}
+
+		if (sta_set_ru_242_tone_tx(dut, intf, 0)) {
+			sigma_dut_print(dut, DUT_MSG_ERROR,
+				  "Failed to set RU 242 tone Tx");
+		}
+
+		if (sta_set_er_su_ppdu_type_tx(dut, intf, 0)) {
+			sigma_dut_print(dut, DUT_MSG_ERROR,
+				  "Failed to set ER-SU PPDU type Tx");
 		}
 
 		if (sta_set_om_ctrl_supp(dut, intf, 1)) {
@@ -8521,8 +8627,7 @@ static int sta_twt_send_suspend(struct sigma_dut *dut, struct sigma_conn *conn,
 	    nla_put_u8(msg, QCA_WLAN_VENDOR_ATTR_CONFIG_TWT_OPERATION,
 		       QCA_WLAN_TWT_SUSPEND) ||
 	    !(attr1 = nla_nest_start(msg,
-				     QCA_WLAN_VENDOR_ATTR_CONFIG_TWT_PARAMS)) ||
-	    nla_put_u8(msg, QCA_WLAN_VENDOR_ATTR_TWT_NUDGE_FLOW_ID, 0)) {
+				     QCA_WLAN_VENDOR_ATTR_CONFIG_TWT_PARAMS))) {
 		sigma_dut_print(dut, DUT_MSG_ERROR,
 				"%s: err in adding vendor_cmd and vendor_data",
 				__func__);
@@ -9413,6 +9518,64 @@ cmd_sta_set_wireless_vht(struct sigma_dut *dut, struct sigma_conn *conn,
 		}
 	}
 
+	val = get_param(cmd, "TWTSchedSTASupport");
+	if (val) {
+		int set_val;
+
+		switch (get_driver_type(dut)) {
+		case DRIVER_WCN:
+			if (strcasecmp(val, "Enable") == 0) {
+				set_val = 1;
+			} else if (strcasecmp(val, "Disable") == 0) {
+				set_val = 0;
+			} else {
+				send_resp(dut, conn, SIGMA_ERROR,
+					  "ErrorCode,Invalid TWTSchedSTASupport");
+				return STATUS_SENT_ERROR;
+			}
+
+			if (sta_set_bcast_twt_support(dut, intf, set_val)) {
+				send_resp(dut, conn, SIGMA_ERROR,
+					  "ErrorCode,Failed to set TWTSchedSTASupport");
+				return STATUS_SENT_ERROR;
+			}
+			break;
+		default:
+			sigma_dut_print(dut, DUT_MSG_ERROR,
+					"Setting TWTSchedSTASupport not supported");
+			break;
+		}
+	}
+
+	val = get_param(cmd, "MBSSID_RxCtrl");
+	if (val) {
+		int set_val;
+
+		switch (get_driver_type(dut)) {
+		case DRIVER_WCN:
+			if (strcasecmp(val, "Enable") == 0) {
+				set_val = 1;
+			} else if (strcasecmp(val, "Disable") == 0) {
+				set_val = 0;
+			} else {
+				send_resp(dut, conn, SIGMA_ERROR,
+					  "ErrorCode,Invalid MBSSID_RxCtrl");
+				return STATUS_SENT_ERROR;
+			}
+
+			if (sta_set_rx_ctrl_multi_bss(dut, intf, set_val)) {
+				send_resp(dut, conn, SIGMA_ERROR,
+					  "ErrorCode,Failed to set MBSSID_RxCtrl");
+				return STATUS_SENT_ERROR;
+			}
+			break;
+		default:
+			sigma_dut_print(dut, DUT_MSG_ERROR,
+					"Setting MBSSID_RxCtrl not supported");
+			break;
+		}
+	}
+
 	val = get_param(cmd, "txBandwidth");
 	if (val) {
 		switch (get_driver_type(dut)) {
@@ -9573,6 +9736,24 @@ cmd_sta_set_wireless_vht(struct sigma_dut *dut, struct sigma_conn *conn,
 		}
 	}
 
+	val = get_param(cmd, "PPDUTxType");
+	if (val && strcasecmp(val, "ER-SU") == 0) {
+		if (sta_set_er_su_ppdu_type_tx(dut, intf, 1)) {
+			send_resp(dut, conn, SIGMA_ERROR,
+				  "ErrorCode,Failed to set ER-SU PPDU type Tx");
+			return STATUS_SENT_ERROR;
+		}
+	}
+
+	val = get_param(cmd, "RUAllocTone");
+	if (val && strcasecmp(val, "242") == 0) {
+		if (sta_set_ru_242_tone_tx(dut, intf, 1)) {
+			send_resp(dut, conn, SIGMA_ERROR,
+				  "ErrorCode,Failed to set RU 242 tone Tx");
+			return STATUS_SENT_ERROR;
+		}
+	}
+
 	val = get_param(cmd, "OMControl");
 	if (val) {
 		int set_val = 1;
@@ -9594,6 +9775,21 @@ cmd_sta_set_wireless_vht(struct sigma_dut *dut, struct sigma_conn *conn,
 		send_resp(dut, conn, SIGMA_ERROR,
 			  "ErrorCode,Failed to set BSS max idle period");
 		return STATUS_SENT_ERROR;
+	}
+
+	val = get_param(cmd, "BSS_max_idle");
+	if (val) {
+		int set_val = 0;
+
+		if (strcasecmp(val, "Enable") == 0)
+			set_val = 1;
+		else if (strcasecmp(val, "Disable") == 0)
+			set_val = 0;
+		if (sta_set_bss_max_idle_support(dut, intf, set_val)) {
+			send_resp(dut, conn, SIGMA_ERROR,
+				  "ErrorCode,Failed to set BSS max idle support");
+			return STATUS_SENT_ERROR;
+		}
 	}
 
 	val = get_param(cmd, "ADDBAResp_BufSize");
@@ -12832,6 +13028,24 @@ wcn_sta_set_rfeature_he(const char *intf, struct sigma_dut *dut,
 		}
 	}
 
+	val = get_param(cmd, "RUAllocTone");
+	if (val && strcasecmp(val, "242") == 0) {
+		if (sta_set_ru_242_tone_tx(dut, intf, 1)) {
+			send_resp(dut, conn, SIGMA_ERROR,
+				  "ErrorCode,Failed to set RU 242 tone Tx");
+			return STATUS_SENT_ERROR;
+		}
+	}
+
+	val = get_param(cmd, "PPDUTxType");
+	if (val && strcasecmp(val, "ER-SU") == 0) {
+		if (sta_set_er_su_ppdu_type_tx(dut, intf, 1)) {
+			send_resp(dut, conn, SIGMA_ERROR,
+				  "ErrorCode,Failed to set ER-SU PPDU type Tx");
+			return STATUS_SENT_ERROR;
+		}
+	}
+
 	val = get_param(cmd, "Ch_Pref");
 	if (val && mbo_set_non_pref_ch_list(dut, conn, intf, cmd) == 0)
 		return STATUS_SENT;
@@ -14135,8 +14349,13 @@ static enum sigma_cmd_result cmd_sta_scan(struct sigma_dut *dut,
 		wpa_command(intf, buf);
 	}
 
+	if (get_param(cmd, "RxMac"))
+		sta_set_scan_unicast_probe(dut, intf, 1);
+
 	bssid = get_param(cmd, "Bssid");
 	ssid = get_param(cmd, "Ssid");
+	if (!bssid)
+		bssid = get_param(cmd, "RxMac");
 
 	if (ssid && strcasecmp(ssid, "ZeroLength") == 0 &&
 	    dut->device_type == STA_testbed) {
