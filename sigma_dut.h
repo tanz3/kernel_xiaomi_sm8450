@@ -15,6 +15,7 @@
 #endif
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -85,10 +86,6 @@
 
 #ifndef ETH_P_ARP
 #define ETH_P_ARP 0x0806
-#endif
-
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(x) (sizeof((x)) / (sizeof(((x)[0]))))
 #endif
 
 #define IPV6_ADDR_LEN 16
@@ -334,6 +331,7 @@ struct nl80211_ctx {
 	int netlink_familyid;
 	int nlctrl_familyid;
 	size_t sock_buf_size;
+	struct nl_sock *event_sock;
 };
 #endif /* NL80211_SUPPORT */
 
@@ -371,6 +369,7 @@ struct sigma_dut {
 	char *station_ifname_5g;
 	char *p2p_ifname_buf;
 	int use_5g;
+	int ap_band_6g;
 	int sta_2g_started;
 	int sta_5g_started;
 
@@ -961,6 +960,8 @@ struct sigma_dut {
 
 	int sta_nss;
 
+	int sta_async_twt_supp; /* Asynchronous TWT response event support */
+
 #ifdef ANDROID
 	int nanservicediscoveryinprogress;
 #endif /* ANDROID */
@@ -989,6 +990,8 @@ struct sigma_dut {
 	int client_privacy_default;
 	int saquery_oci_freq;
 	char device_driver[32];
+	int user_config_ap_ocvc;
+	int user_config_ap_beacon_prot;
 };
 
 
