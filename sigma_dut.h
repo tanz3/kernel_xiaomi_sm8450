@@ -32,9 +32,7 @@
 #endif /* __QNXNTO__ */
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#ifdef CONFIG_TRAFFIC_AGENT
 #include <pthread.h>
-#endif /* CONFIG_TRAFFIC_AGENT */
 #ifdef NL80211_SUPPORT
 #include <netlink/genl/family.h>
 #include <netlink/genl/ctrl.h>
@@ -358,6 +356,42 @@ enum akm_suite_values {
 	AKM_FT_FILS_SHA256 = 16,
 	AKM_FT_FILS_SHA384 = 17,
 
+};
+
+enum ip_version {
+	DEFAULT_IP_VERSION = 0,
+	IPV4 = 4,
+	IPV6 = 6,
+};
+
+enum ip_protocol {
+	DEFAULT_PROTOCOL = 0,
+	PROTOCOL_UDP = 17,
+	PROTOCOL_TCP = 6,
+	PROTOCOL_ESP = 50,
+};
+
+#define DSCP_POLICY_SUCCESS 0
+#define DSCP_POLICY_REJECT 1
+
+struct dscp_policy_status {
+	int id;
+	int status;
+};
+
+struct dscp_policy_data {
+	char domain_name[250];
+	int policy_id;
+	enum ip_version ip_version;
+	char src_ip[INET6_ADDRSTRLEN];
+	char dst_ip[INET6_ADDRSTRLEN];
+	int src_port;
+	int dst_port;
+	int start_port;
+	int end_port;
+	enum ip_protocol protocol;
+	int dscp;
+	struct dscp_policy_data *next;
 };
 
 struct sigma_dut {
@@ -992,6 +1026,13 @@ struct sigma_dut {
 	char device_driver[32];
 	int user_config_ap_ocvc;
 	int user_config_ap_beacon_prot;
+	char qm_domain_name[250];
+	struct dscp_policy_data *dscp_policy_table;
+	pthread_t dscp_policy_mon_thread;
+	int reject_dscp_policies;
+	int dscp_reject_resp_code;
+	struct dscp_policy_status dscp_status[5];
+	unsigned int num_dscp_status;
 };
 
 
@@ -1136,6 +1177,8 @@ int sta_set_addba_buf_size(struct sigma_dut *dut,
 int wcn_set_he_ltf(struct sigma_dut *dut, const char *intf,
 		   enum qca_wlan_he_ltf_cfg ltf);
 #endif /* NL80211_SUPPORT */
+void stop_dscp_policy_mon_thread(struct sigma_dut *dut);
+void free_dscp_policy_table(struct sigma_dut *dut);
 
 /* p2p.c */
 void p2p_register_cmds(void);
@@ -1168,6 +1211,7 @@ int is_ipv6_addr(const char *str);
 void convert_mac_addr_to_ipv6_lladdr(u8 *mac_addr, char *ipv6_buf,
 				     size_t buf_len);
 size_t convert_mac_addr_to_ipv6_linklocal(const u8 *mac_addr, u8 *ipv6);
+int snprintf_error(size_t size, int res);
 
 #ifndef ANDROID
 size_t strlcpy(char *dest, const char *src, size_t siz);
