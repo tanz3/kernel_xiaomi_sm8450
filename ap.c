@@ -2,7 +2,7 @@
  * Sigma Control API DUT (station/AP)
  * Copyright (c) 2010-2011, Atheros Communications, Inc.
  * Copyright (c) 2011-2017, Qualcomm Atheros, Inc.
- * Copyright (c) 2018-2019, The Linux Foundation
+ * Copyright (c) 2018-2021, The Linux Foundation
  * All Rights Reserved.
  * Licensed under the Clear BSD license. See README for more details.
  */
@@ -128,7 +128,7 @@ static int fwtest_cmd_wrapper(struct sigma_dut *dut, const char *arg,
 {
 	int ret = -1;
 
-	if (strcmp(dut->device_driver, "ath11k") == 0)
+	if (strncmp(dut->device_driver, "ath11k", 6) == 0)
 		ret = run_system_wrapper(dut, "ath11k-fwtest -i %s %s",
 					 ifname, arg);
 
@@ -1140,8 +1140,12 @@ static enum sigma_cmd_result cmd_ap_set_wireless(struct sigma_dut *dut,
 	/* TODO: SGI20 */
 
 	val = get_param(cmd, "STBC_TX");
-	if (val)
-		dut->ap_tx_stbc = atoi(val);
+	if (val) {
+		if (atoi(val))
+			dut->ap_tx_stbc = VALUE_ENABLED;
+		else
+			dut->ap_tx_stbc = VALUE_DISABLED;
+	}
 
 	val = get_param(cmd, "WIDTH");
 	if (val) {
@@ -2209,6 +2213,7 @@ static enum sigma_cmd_result cmd_ap_set_security(struct sigma_dut *dut,
 	const char *val;
 	unsigned int wlan_tag = 1;
 	const char *security;
+	bool pmf_set = false;
 
 	val = get_param(cmd, "WLAN_TAG");
 	if (val) {
@@ -2594,6 +2599,7 @@ static enum sigma_cmd_result cmd_ap_set_security(struct sigma_dut *dut,
 				  "errorCode,Unsupported PMF");
 			return 0;
 		}
+		pmf_set = true;
 	}
 
 	dut->ap_add_sha256 = 0;
@@ -2686,6 +2692,8 @@ static enum sigma_cmd_result cmd_ap_set_security(struct sigma_dut *dut,
 				return STATUS_SENT;
 			}
 			dut->ap_transition_disable = 1 << atoi(val);
+			if (dut->ap_pmf == AP_PMF_DISABLED && !pmf_set)
+				dut->ap_pmf = AP_PMF_OPTIONAL;
 		} else {
 			dut->ap_transition_disable = 0;
 		}
@@ -4269,7 +4277,7 @@ static int owrt_ap_config_vap(struct sigma_dut *dut)
 		}
 	}
 
-	if (dut->ap_tx_stbc) {
+	if (dut->ap_tx_stbc == VALUE_ENABLED) {
 		/* STBC and beamforming are mutually exclusive features */
 		owrt_ap_set_vap(dut, vap_id, "implicitbf", "0");
 	}
@@ -5867,7 +5875,7 @@ static void cmd_ath_ap_radio_config(struct sigma_dut *dut)
 			break;
 		}
 
-		if (dut->ap_tx_stbc) {
+		if (dut->ap_tx_stbc == VALUE_ENABLED) {
 			run_system(dut, "cfg -a TX_STBC_2=1");
 		}
 
@@ -7793,6 +7801,31 @@ static void fwtest_set_he_params(struct sigma_dut *dut, const char *ifname)
 
 	if (dut->he_sounding == VALUE_ENABLED)
 		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 7 0", ifname);
+
+	if (dut->ap_bcc == VALUE_ENABLED) {
+		fwtest_cmd_wrapper(dut, "-t 1 -m 0x0 -v 0 0x1B 0x10000407",
+				   ifname);
+		fwtest_cmd_wrapper(dut, "-t 1 -m 0x0 -v 0 0x1D 0", ifname);
+	}
+}
+
+
+#define IEEE80211_VHT_CAP_TXSTBC                               ((u32) (1 << 7))
+
+static enum value_not_set_enabled_disabled
+get_driver_ap_tx_stbc_capab(struct sigma_dut *dut)
+{
+	sigma_dut_print(dut, DUT_MSG_DEBUG,
+			"[hw_modes] valid=%d vht_capab=0x%x",
+			dut->hw_modes.valid, dut->hw_modes.vht_capab);
+#ifdef NL80211_SUPPORT
+	if (dut->hw_modes.valid)
+		return (dut->hw_modes.vht_capab & IEEE80211_VHT_CAP_TXSTBC) ?
+			VALUE_ENABLED : VALUE_DISABLED;
+#endif /* NL80211_SUPPORT */
+
+	/* Assume supported by default */
+	return VALUE_ENABLED;
 }
 
 
@@ -8078,6 +8111,9 @@ write_conf:
 	if (drv == DRIVER_MAC80211 || drv == DRIVER_LINUX_WCN)
 		fprintf(f, "driver=nl80211\n");
 
+	if (dut->ap_tx_stbc == VALUE_NOT_SET && drv == DRIVER_LINUX_WCN)
+		dut->ap_tx_stbc = get_driver_ap_tx_stbc_capab(dut);
+
 	if ((drv == DRIVER_MAC80211 || drv == DRIVER_QNXNTO ||
 	     drv == DRIVER_LINUX_WCN) &&
 	    (dut->ap_mode == AP_11ng || dut->ap_mode == AP_11na ||
@@ -8109,7 +8145,7 @@ write_conf:
 				ht40minus = 1;
 		}
 
-		if (dut->ap_tx_stbc)
+		if (dut->ap_tx_stbc == VALUE_ENABLED)
 			tx_stbc = 1;
 
 		/* Overwrite the ht_capab with offset value if configured */
@@ -8841,7 +8877,7 @@ skip_key_mgmt:
 
 		if (dut->ap_sgi80 || dut->ap_txBF ||
 		    dut->ap_ldpc != VALUE_NOT_SET ||
-		    dut->ap_tx_stbc || dut->ap_mu_txBF ||
+		    dut->ap_tx_stbc == VALUE_ENABLED || dut->ap_mu_txBF ||
 		    dut->ap_ampdu_exp || dut->ap_max_mpdu_len ||
 		    dut->ap_chwidth == AP_160 || dut->ap_chwidth == AP_80_80) {
 			fprintf(f, "vht_capab=%s%s%s%s%s%s",
@@ -8850,7 +8886,8 @@ skip_key_mgmt:
 				"[SU-BEAMFORMER][SU-BEAMFORMEE][BF-ANTENNA-2][SOUNDING-DIMENSION-2]" : "",
 				(dut->ap_ldpc == VALUE_ENABLED) ?
 				"[RXLDPC]" : "",
-				dut->ap_tx_stbc ? "[TX-STBC-2BY1]" : "",
+				(dut->ap_tx_stbc == VALUE_ENABLED) ?
+				"[TX-STBC-2BY1]" : "",
 				dut->ap_mu_txBF ? "[MU-BEAMFORMER]" : "",
 				dut->ap_chwidth == AP_160 ? "[VHT160]" :
 				(dut->ap_chwidth == AP_80_80 ?
@@ -9528,9 +9565,41 @@ static void phy_info_vht_capa(struct dut_hw_modes *mode,
 }
 
 
+static void phy_info_he_capa(struct dut_hw_modes *mode,
+			     struct nlattr *nl_iftype)
+{
+	struct nlattr *tb[NL80211_BAND_IFTYPE_ATTR_MAX + 1];
+	struct nlattr *tb_flags[NL80211_IFTYPE_MAX + 1];
+
+	nla_parse(tb, NL80211_BAND_IFTYPE_ATTR_MAX,
+		  nla_data(nl_iftype), nla_len(nl_iftype), NULL);
+
+	if (!tb[NL80211_BAND_IFTYPE_ATTR_IFTYPES])
+		return;
+
+	if (nla_parse_nested(tb_flags, NL80211_IFTYPE_MAX,
+			     tb[NL80211_BAND_IFTYPE_ATTR_IFTYPES], NULL))
+		return;
+
+	if (!nla_get_flag(tb_flags[NL80211_IFTYPE_AP]))
+		return;
+
+	if (tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]) {
+		size_t len = nla_len(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]);
+
+		if (len > sizeof(mode->ap_he_phy_capab))
+			len = sizeof(mode->ap_he_phy_capab);
+
+		memcpy(mode->ap_he_phy_capab,
+		       nla_data(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]), len);
+	}
+}
+
 static int phy_info_band(struct dut_hw_modes *mode, struct nlattr *nl_band)
 {
 	struct nlattr *tb_band[NL80211_BAND_ATTR_MAX + 1];
+	struct nlattr *nl_iftype;
+	int rem_band;
 
 	nla_parse(tb_band, NL80211_BAND_ATTR_MAX, nla_data(nl_band),
 		  nla_len(nl_band), NULL);
@@ -9542,6 +9611,13 @@ static int phy_info_band(struct dut_hw_modes *mode, struct nlattr *nl_band)
 
 	phy_info_vht_capa(mode, tb_band[NL80211_BAND_ATTR_VHT_CAPA],
 			  tb_band[NL80211_BAND_ATTR_VHT_MCS_SET]);
+
+	if (tb_band[NL80211_BAND_ATTR_IFTYPE_DATA]) {
+		nla_for_each_nested(nl_iftype,
+				    tb_band[NL80211_BAND_ATTR_IFTYPE_DATA],
+				    rem_band)
+			phy_info_he_capa(mode, nl_iftype);
+	}
 
 	/* Other nl80211 band attributes can be parsed here, if required */
 
@@ -9590,6 +9666,49 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 			return res;
 	}
 
+	/* Check for MU Beamformer capability (B33) and disable this capability
+	 * if the driver does not support it. This clears the default value
+	 * set in cmd_ap_reset_default(). */
+	if (dut->program == PROGRAM_HE &&
+	    !(dut->hw_modes.ap_he_phy_capab[33 / 8] & (1 << (33 % 8))))
+		dut->ap_mu_txBF = 0;
+
+	return 0;
+}
+
+
+static int protocol_feature_handler(struct nl_msg *msg, void *arg)
+{
+	u32 *feat = arg;
+	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+
+	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+		  genlmsg_attrlen(gnlh, 0), NULL);
+
+	if (tb_msg[NL80211_ATTR_PROTOCOL_FEATURES])
+		*feat = nla_get_u32(tb_msg[NL80211_ATTR_PROTOCOL_FEATURES]);
+
+	return NL_SKIP;
+}
+
+
+static u32 get_nl80211_protocol_features(struct sigma_dut *dut, int ifindex)
+{
+	u32 feat = 0;
+	struct nl_msg *msg;
+
+	if (!(msg = nl80211_drv_msg(dut, dut->nl_ctx, ifindex, 0,
+				    NL80211_CMD_GET_PROTOCOL_FEATURES))) {
+		sigma_dut_print(dut, DUT_MSG_DEBUG,
+				"%s: could not get protocol feature", __func__);
+		return 0;
+	}
+
+	if (send_and_recv_msgs(dut, dut->nl_ctx, msg, protocol_feature_handler,
+			       &feat) == 0)
+		return feat;
+
 	return 0;
 }
 
@@ -9597,6 +9716,8 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
 static int mac80211_get_wiphy(struct sigma_dut *dut)
 {
 	struct nl_msg *msg;
+	u32 feat;
+	int flags = 0;
 	int ret = 0;
 	int ifindex;
 
@@ -9608,9 +9729,14 @@ static int mac80211_get_wiphy(struct sigma_dut *dut)
 		return -1;
 	}
 
-	if (!(msg = nl80211_drv_msg(dut, dut->nl_ctx, ifindex, 0,
+	feat = get_nl80211_protocol_features(dut, ifindex);
+	if (feat & NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP)
+		flags = NLM_F_DUMP;
+
+	if (!(msg = nl80211_drv_msg(dut, dut->nl_ctx, ifindex, flags,
 				    NL80211_CMD_GET_WIPHY)) ||
-	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex)) {
+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, ifindex) ||
+	    nla_put_flag(msg, NL80211_ATTR_SPLIT_WIPHY_DUMP)) {
 		sigma_dut_print(dut, DUT_MSG_DEBUG,
 				"%s: could not build get wiphy cmd", __func__);
 		nlmsg_free(msg);
@@ -9850,7 +9976,16 @@ static enum sigma_cmd_result cmd_ap_reset_default(struct sigma_dut *dut,
 		dut->ap_tx_streams = 3;
 		dut->ap_vhtmcs_map = 0;
 		dut->ap_chwidth = AP_80;
-		dut->ap_tx_stbc = 1;
+		/*
+		 * TX STBC is optional, so don't enable it here for the
+		 * LINUX-WCN driver. When processing ap_config_commit, if this
+		 * is still not set, query it from the wiphy to see if it is
+		 * supported by the driver.
+		 */
+		if (drv == DRIVER_LINUX_WCN)
+			dut->ap_tx_stbc = VALUE_NOT_SET;
+		else
+			dut->ap_tx_stbc = VALUE_ENABLED;
 		dut->ap_dyn_bw_sig = VALUE_ENABLED;
 		if (get_openwrt_driver_type() == OPENWRT_DRIVER_ATHEROS)
 			dut->ap_dfs_mode = AP_DFS_MODE_ENABLED;
@@ -10006,9 +10141,14 @@ static enum sigma_cmd_result cmd_ap_reset_default(struct sigma_dut *dut,
 
 	memset(&dut->hw_modes, 0, sizeof(struct dut_hw_modes));
 #ifdef NL80211_SUPPORT
-	if (get_driver_type(dut) == DRIVER_MAC80211 && mac80211_get_wiphy(dut))
-		sigma_dut_print(dut, DUT_MSG_DEBUG,
-				"Failed to get wiphy data from the driver");
+	if (get_driver_type(dut) == DRIVER_MAC80211 ||
+	    get_driver_type(dut) == DRIVER_LINUX_WCN) {
+		if (mac80211_get_wiphy(dut))
+			sigma_dut_print(dut, DUT_MSG_DEBUG,
+					"Failed to get wiphy data from the driver");
+		else
+			dut->hw_modes.valid = true;
+	}
 #endif /* NL80211_SUPPORT */
 
 	dut->ap_oper_chn = 0;

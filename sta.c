@@ -2,7 +2,7 @@
  * Sigma Control API DUT (station/AP)
  * Copyright (c) 2010-2011, Atheros Communications, Inc.
  * Copyright (c) 2011-2017, Qualcomm Atheros, Inc.
- * Copyright (c) 2018, The Linux Foundation
+ * Copyright (c) 2018-2021, The Linux Foundation
  * All Rights Reserved.
  * Licensed under the Clear BSD license. See README for more details.
  */
@@ -2131,6 +2131,21 @@ static int set_wpa_common(struct sigma_dut *dut, struct sigma_conn *conn,
 }
 
 
+static int wcn_set_ignore_h2e_rsnxe(struct sigma_dut *dut, const char *intf,
+				    uint8_t cfg)
+{
+#ifdef NL80211_SUPPORT
+	return wcn_wifi_test_config_set_u8(
+		dut, intf,
+		QCA_WLAN_VENDOR_ATTR_WIFI_TEST_CONFIG_IGNORE_H2E_RSNXE, cfg);
+#else /* NL80211_SUPPORT */
+	sigma_dut_print(dut, DUT_MSG_ERROR,
+			"Ignore SAE H2E requirement mismatch can't be set without NL80211_SUPPORT defined");
+	return -1;
+#endif /* NL80211_SUPPORT */
+}
+
+
 static enum sigma_cmd_result cmd_sta_set_psk(struct sigma_dut *dut,
 					     struct sigma_conn *conn,
 					     struct sigma_cmd *cmd)
@@ -2265,6 +2280,9 @@ static enum sigma_cmd_result cmd_sta_set_psk(struct sigma_dut *dut,
 		snprintf(buf, sizeof(buf), "SET ignore_sae_h2e_only %d",
 			 get_enable_disable(val));
 		wpa_command(intf, buf);
+		if (get_driver_type(dut) == DRIVER_WCN)
+			wcn_set_ignore_h2e_rsnxe(dut, intf,
+						 get_enable_disable(val));
 	}
 
 	val = get_param(cmd, "ECGroupID_RGE");
@@ -5979,13 +5997,17 @@ cmd_sta_preset_testparameters(struct sigma_dut *dut, struct sigma_conn *conn,
 			return INVALID_SEND_STATUS;
 		}
 
-		len = snprintf(buf, sizeof(buf), "SET disable_scs_support %d",
-			       disable_scs);
-		if (len < 0 || len >= sizeof(buf) ||
-		    wpa_command(intf, buf) != 0) {
-			send_resp(dut, conn, SIGMA_ERROR,
-				  "ErrorCode,Failed to update SCS support");
-			return STATUS_SENT_ERROR;
+		if (disable_scs || dut->prev_disable_scs_support) {
+			len = snprintf(buf, sizeof(buf),
+				       "SET disable_scs_support %d",
+				       disable_scs);
+			if (len < 0 || len >= sizeof(buf) ||
+			    wpa_command(intf, buf) != 0) {
+				send_resp(dut, conn, SIGMA_ERROR,
+					  "ErrorCode,Failed to update SCS support");
+				return STATUS_SENT_ERROR;
+			}
+			dut->prev_disable_scs_support = disable_scs;
 		}
 	}
 
@@ -6004,13 +6026,17 @@ cmd_sta_preset_testparameters(struct sigma_dut *dut, struct sigma_conn *conn,
 			return INVALID_SEND_STATUS;
 		}
 
-		len = snprintf(buf, sizeof(buf), "SET disable_mscs_support %d",
-			       disable_mscs);
-		if (len < 0 || len >= sizeof(buf) ||
-		    wpa_command(intf, buf) != 0) {
-			send_resp(dut, conn, SIGMA_ERROR,
-				  "ErrorCode,Failed to update MSCS support");
-			return STATUS_SENT_ERROR;
+		if (disable_mscs || dut->prev_disable_mscs_support) {
+			len = snprintf(buf, sizeof(buf),
+				       "SET disable_mscs_support %d",
+				       disable_mscs);
+			if (len < 0 || len >= sizeof(buf) ||
+			    wpa_command(intf, buf) != 0) {
+				send_resp(dut, conn, SIGMA_ERROR,
+					  "ErrorCode,Failed to update MSCS support");
+				return STATUS_SENT_ERROR;
+			}
+			dut->prev_disable_mscs_support = disable_mscs;
 		}
 	}
 
@@ -8908,8 +8934,6 @@ static enum sigma_cmd_result cmd_sta_reset_default(struct sigma_dut *dut,
 
 	if (dut->program == PROGRAM_QM) {
 		wpa_command(intf, "SET interworking 1");
-		wpa_command(intf, "SET disable_scs_support 0");
-		wpa_command(intf, "SET disable_mscs_support 0");
 		wpa_command(intf, "SET enable_dscp_policy_capa 1");
 		dut->qm_domain_name[0] = '\0';
 		dut->reject_dscp_policies = 0;
@@ -8966,7 +8990,12 @@ static enum sigma_cmd_result cmd_sta_reset_default(struct sigma_dut *dut,
 		 * so allow this to continue. */
 	}
 
+	if (get_driver_type(dut) == DRIVER_WCN)
+		wcn_set_ignore_h2e_rsnxe(dut, intf, 0);
+
 	dut->saquery_oci_freq = 0;
+	dut->prev_disable_scs_support = 0;
+	dut->prev_disable_mscs_support = 0;
 
 	if (dut->program != PROGRAM_VHT)
 		return cmd_sta_p2p_reset(dut, conn, cmd);

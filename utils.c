@@ -1,7 +1,7 @@
 /*
  * Sigma Control API DUT (station/AP)
  * Copyright (c) 2014-2017, Qualcomm Atheros, Inc.
- * Copyright (c) 2018, The Linux Foundation
+ * Copyright (c) 2018-2021, The Linux Foundation
  * Copyright (c) 2005-2011, Jouni Malinen <j@w1.fi>
  * All Rights Reserved.
  * Licensed under the Clear BSD license. See README for more details.
@@ -373,15 +373,17 @@ size_t strlcat(char *dst, const char *str, size_t size)
 	size_t dstlen, srclen, copy;
 
 	srclen = strlen(str);
-	for (pos = dst; pos - dst < size && *dst; pos++)
-		;
-	dstlen = pos - dst;
-	if (*dst)
+	dstlen = strlen(dst);
+	pos = dst + dstlen;
+
+	if (dstlen >= size)
 		return dstlen + srclen;
-	if (dstlen + srclen + 1 > size)
+
+	if (dstlen + srclen >= size)
 		copy = size - dstlen - 1;
 	else
 		copy = srclen;
+
 	memcpy(pos, str, copy);
 	pos[copy] = '\0';
 	return dstlen + srclen;
