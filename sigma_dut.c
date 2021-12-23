@@ -1322,6 +1322,7 @@ int main(int argc, char *argv[])
 
 #ifdef NL80211_SUPPORT
 	sigma_dut.nl_ctx = nl80211_init(&sigma_dut);
+	get_wiphy_capabilities(&sigma_dut);
 #endif /* NL80211_SUPPORT */
 	sigma_dut_register_cmds();
 
