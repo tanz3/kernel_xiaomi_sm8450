@@ -2,6 +2,7 @@
 /*
  * Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
  * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (C) 2021 XiaoMi, Inc.
  */
 
 #include <dt-bindings/regulator/qcom,rpmh-regulator-levels.h>
@@ -3208,8 +3209,6 @@ static int a6xx_first_boot(struct adreno_device *adreno_dev)
 	 * done reading all firmware files.
 	 */
 	device->pwrscale.devfreq_enabled = true;
-
-	device->pwrctrl.last_stat_updated = ktime_get();
 
 	kgsl_pwrctrl_set_state(device, KGSL_STATE_ACTIVE);
 

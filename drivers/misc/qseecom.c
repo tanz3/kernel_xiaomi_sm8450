@@ -3,6 +3,7 @@
  * QTI Secure Execution Environment Communicator (QSEECOM) driver
  *
  * Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2021 XiaoMi, Inc.
  */
 
 #define pr_fmt(fmt) "QSEECOM: %s: " fmt, __func__
@@ -2919,29 +2920,23 @@ static int qseecom_load_app(struct qseecom_dev_handle *data, void __user *argp)
 			}
 
 			if (resp.result == QSEOS_RESULT_BLOCKED_ON_LISTENER) {
-				pr_err("load app blocked on listener\n");
-				data->client.app_id = resp.result;
-				data->client.from_loadapp = true;
-				ret = __qseecom_process_reentrancy_blocked_on_listener(&resp,
-					NULL, data);
+				pr_err("load app blocked on listener");
+				ret = __qseecom_process_reentrancy_blocked_on_listener(&resp, NULL, data);
 				if (ret) {
-					pr_err("load app fail proc block on listener,ret :%d\n",
-						ret);
+					pr_err("load app fail proc block on listener cmd,ret :%d", ret);
 					ret = -EFAULT;
 					goto loadapp_err;
 				}
 			}
 
+			if (resp.result != QSEOS_RESULT_SUCCESS) {
+				pr_err("scm_call failed resp.result unknown, %d\n",
+					resp.result);
+				ret = -EFAULT;
+				goto loadapp_err;
+			}
 		} while ((resp.result == QSEOS_RESULT_BLOCKED_ON_LISTENER) ||
 			(resp.result == QSEOS_RESULT_INCOMPLETE));
-
-		if (resp.result != QSEOS_RESULT_SUCCESS) {
-			pr_err("scm_call failed resp.result unknown, %d\n",
-				resp.result);
-			ret = -EFAULT;
-			goto loadapp_err;
-		}
-
 		app_id = resp.data;
 
 		entry = kmalloc(sizeof(*entry), GFP_KERNEL);

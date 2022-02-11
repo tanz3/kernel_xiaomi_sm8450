@@ -2,6 +2,7 @@
 /*
  * Copyright (c) 2021, The Linux Foundation. All rights reserved.
  * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (C) 2021 XiaoMi, Inc.
  */
 
 #include <linux/clk.h>
@@ -720,7 +721,6 @@ static int gen7_hwsched_first_boot(struct adreno_device *adreno_dev)
 	 */
 	device->pwrscale.devfreq_enabled = true;
 
-	device->pwrctrl.last_stat_updated = ktime_get();
 	device->state = KGSL_STATE_ACTIVE;
 
 	trace_kgsl_pwr_set_state(device, KGSL_STATE_ACTIVE);

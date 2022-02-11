@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (c) 2011-2017, The Linux Foundation
+ * Copyright (C) 2021 XiaoMi, Inc.
  */
 
 #ifndef _LINUX_SLIMBUS_H

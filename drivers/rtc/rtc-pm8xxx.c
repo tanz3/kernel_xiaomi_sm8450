@@ -2,6 +2,7 @@
 /*
  * Copyright (c) 2010-2011, 2019-2021, The Linux Foundation. All rights reserved.
  * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (C) 2021 XiaoMi, Inc.
  */
 
 #include <linux/of.h>
@@ -238,7 +239,7 @@ static int pm8xxx_rtc_read_time(struct device *dev, struct rtc_time *tm)
 
 	rc = pm8xxx_rtc_read_rtc_data(rtc_dd, &secs);
 	if (rc) {
-		dev_err(dev, "RTC read time failed\n");
+		dev_err(rtc_dd->rtc_dev, "RTC read time failed\n");
 		return rc;
 	}
 
