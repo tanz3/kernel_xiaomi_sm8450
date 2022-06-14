@@ -66,3 +66,4 @@ obj-$(CONFIG_WIGIG_SENSING_SPI)	+= wigig_sensing.o
 obj-$(CONFIG_GPIO_TESTING_MODE) += gpio-testing-mode.o
 obj-$(CONFIG_PERF_HELPER)       += perf_helper.o
 obj-y 							+= mi-memory/
+obj-$(CONFIG_MI_GAMEKEY)        += mi_gamekey/
