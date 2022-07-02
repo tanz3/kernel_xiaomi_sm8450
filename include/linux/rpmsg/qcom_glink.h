@@ -48,6 +48,7 @@ static inline bool qcom_glink_is_wakeup(bool reset)
 struct qcom_glink *qcom_glink_spss_register(struct device *parent,
 					    struct device_node *node);
 void qcom_glink_spss_unregister(struct qcom_glink *glink);
+int qcom_glink_spss_start(struct qcom_glink *glink);
 
 #else
 
@@ -78,6 +79,11 @@ qcom_glink_spi_register(struct device *parent, struct device_node *node)
 }
 
 static inline void qcom_glink_spi_unregister(struct glink_spi *glink) {}
+
+int qcom_glink_spss_start(struct qcom_glink *glink)
+{
+	return -ENXIO;
+}
 
 #endif
 
