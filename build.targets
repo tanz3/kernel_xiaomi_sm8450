@@ -4,4 +4,7 @@ build.config.anorak
 build.config.neo_le
 build.config.neo_la
 build.config.msm.parrot
-
+build.config.msm.zeus
+build.config.msm.zeus.tuivm
+build.config.msm.cupid
+build.config.msm.cupid.tuivm
