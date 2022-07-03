@@ -1,6 +1,6 @@
-LINUXINCLUDE    += -I$(EVA_ROOT)/include \
-                   -I$(EVA_ROOT)/include/uapi \
-				   -I$(EVA_ROOT)/include/uapi/eva
+LINUXINCLUDE    += -I$(srctree)/techpack/eva/include \
+                   -I$(srctree)/techpack/eva/include/uapi \
+				   -I$(srctree)/techpack/eva/include/uapi/eva
 
 ccflags-y += -I$(srctree)/drivers/media/platform/msm/synx/
 
@@ -13,14 +13,14 @@ $(info within KBUILD file KBUILD_EXTRA_SYMBOLS = $(KBUILD_EXTRA_SYMBOLS))
 
 ifeq ($(CONFIG_ARCH_WAIPIO), y)
 $(info within KBUILD file CONFIG_ARCH_WAIPIO = $(CONFIG_ARCH_WAIPIO))
-# include $(EVA_ROOT)/config/waipio.mk
+# include $(srctree)/techpack/eva/config/waipio.mk
 KBUILD_CPPFLAGS += -DCONFIG_EVA_WAIPIO=1
 ccflags-y += -DCONFIG_EVA_WAIPIO=1
 endif
 
 ifeq ($(CONFIG_ARCH_KALAMA), y)
 $(info within KBUILD file CONFIG_ARCH_KALAMA = $(CONFIG_ARCH_KALAMA))
-# include $(EVA_ROOT)/config/waipio.mk
+# include $(srctree)/techpack/eva/config/waipio.mk
 KBUILD_CPPFLAGS += -DCONFIG_EVA_KALAMA=1
 ccflags-y += -DCONFIG_EVA_KALAMA=1
 endif
