@@ -522,6 +522,12 @@ config PERF_HELPER
 	help
 	  this module support record perf lock history and other perf messages.
 
+config MI_HARDWARE_ID
+	tristate "Register xiaomi hwid module"
+	default n
+	help
+	  This adds support for mi hwid.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
