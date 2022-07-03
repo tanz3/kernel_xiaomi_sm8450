@@ -3,35 +3,35 @@
 KBUILD_CPPFLAGS += -DCONFIG_MSM_MMRM=1
 
 ifeq ($(CONFIG_ARCH_WAIPIO), y)
-include $(VIDEO_ROOT)/config/waipio_video.conf
-LINUXINCLUDE    += -include $(VIDEO_ROOT)/config/waipio_video.h \
-                   -I$(VIDEO_ROOT)/driver/platform/waipio/inc
+include $(srctree)/techpack/video/config/waipio_video.conf
+LINUXINCLUDE    += -include $(srctree)/techpack/video/config/waipio_video.h \
+                   -I$(srctree)/techpack/video/driver/platform/waipio/inc
 endif
 
 ifeq ($(CONFIG_ARCH_DIWALI), y)
-include $(VIDEO_ROOT)/config/diwali_video.conf
-LINUXINCLUDE    += -include $(VIDEO_ROOT)/config/diwali_video.h \
-                   -I$(VIDEO_ROOT)/driver/platform/diwali/inc
+include $(srctree)/techpack/video/config/diwali_video.conf
+LINUXINCLUDE    += -include $(srctree)/techpack/video/config/diwali_video.h \
+                   -I$(srctree)/techpack/video/driver/platform/diwali/inc
 endif
 
 ifeq ($(CONFIG_ARCH_NEO), y)
-include $(VIDEO_ROOT)/config/neo_video.conf
-LINUXINCLUDE    += -include $(VIDEO_ROOT)/config/neo_video.h \
-                   -I$(VIDEO_ROOT)/driver/platform/neo/inc
+include $(srctree)/techpack/video/config/neo_video.conf
+LINUXINCLUDE    += -include $(srctree)/techpack/video/config/neo_video.h \
+                   -I$(srctree)/techpack/video/driver/platform/neo/inc
 endif
 
 ifeq ($(CONFIG_ARCH_PARROT), y)
-include $(VIDEO_ROOT)/config/parrot_video.conf
-LINUXINCLUDE    += -include $(VIDEO_ROOT)/config/parrot_video.h \
-                   -I$(VIDEO_ROOT)/driver/platform/parrot/inc
+include $(srctree)/techpack/video/config/parrot_video.conf
+LINUXINCLUDE    += -include $(srctree)/techpack/video/config/parrot_video.h \
+                   -I$(srctree)/techpack/video/driver/platform/parrot/inc
 endif
 
-LINUXINCLUDE    += -I$(VIDEO_ROOT)/driver/vidc/inc \
-                   -I$(VIDEO_ROOT)/driver/platform/common/inc \
-                   -I$(VIDEO_ROOT)/include/uapi/vidc
+LINUXINCLUDE    += -I$(srctree)/techpack/video/driver/vidc/inc \
+                   -I$(srctree)/techpack/video/driver/platform/common/inc \
+                   -I$(srctree)/techpack/video/include/uapi/vidc
 
-USERINCLUDE     += -I$(VIDEO_ROOT)/include/uapi/vidc/media \
-                   -I$(VIDEO_ROOT)/include/uapi/vidc
+USERINCLUDE     += -I$(srctree)/techpack/video/include/uapi/vidc/media \
+                   -I$(srctree)/techpack/video/include/uapi/vidc
 
 obj-m += msm_video.o
 
@@ -52,7 +52,7 @@ msm_video-objs += driver/platform/parrot/src/msm_vidc_parrot.o
 endif
 
 ifeq ($(CONFIG_MSM_VIDC_IRIS2), y)
-LINUXINCLUDE   += -I$(VIDEO_ROOT)/driver/variant/iris2/inc
+LINUXINCLUDE   += -I$(srctree)/techpack/video/driver/variant/iris2/inc
 msm_video-objs += driver/variant/iris2/src/msm_vidc_buffer_iris2.o \
                   driver/variant/iris2/src/msm_vidc_power_iris2.o \
                   driver/variant/iris2/src/msm_vidc_iris2.o
@@ -61,7 +61,7 @@ endif
 # As of now for NEO, IRIS3 & IRIS2 have no changes.
 # If any changes are seen, add new iris3 based files later
 ifeq ($(CONFIG_MSM_VIDC_IRIS3), y)
-LINUXINCLUDE   += -I$(VIDEO_ROOT)/driver/variant/iris2/inc
+LINUXINCLUDE   += -I$(srctree)/techpack/video/driver/variant/iris2/inc
 msm_video-objs += driver/variant/iris2/src/msm_vidc_buffer_iris2.o \
                   driver/variant/iris2/src/msm_vidc_power_iris2.o \
                   driver/variant/iris2/src/msm_vidc_iris2.o
