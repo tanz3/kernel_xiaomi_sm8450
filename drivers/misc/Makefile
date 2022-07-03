@@ -70,3 +70,4 @@ obj-$(CONFIG_WIGIG_SENSING_SPI)	+= wigig_sensing.o
 obj-$(CONFIG_PERF_HELPER)       += perf_helper.o
 obj-$(CONFIG_MI_GAMEKEY)        += mi_gamekey/
 obj-y               += mi-power/
+obj-$(CONFIG_MI_HARDWARE_ID)	+= hwid.o
