@@ -1,69 +1,69 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 ifeq ($(CONFIG_QCOM_CAMERA_DEBUG), y)
-$(info "CAMERA_KERNEL_ROOT is: $(CAMERA_KERNEL_ROOT)")
+$(info "CAMERA_KERNEL_ROOT is: $(srctree)/techpack/camera")
 $(info "KERNEL_ROOT is: $(KERNEL_ROOT)")
 endif
 
 # Include Architecture configurations
 ifeq ($(CONFIG_ARCH_KALAMA), y)
-include $(CAMERA_KERNEL_ROOT)/config/kalama.mk
+include $(srctree)/techpack/camera/config/kalama.mk
 endif
 
 ifeq ($(CONFIG_ARCH_WAIPIO), y)
-include $(CAMERA_KERNEL_ROOT)/config/waipio.mk
+include $(srctree)/techpack/camera/config/waipio.mk
 endif
 
 ifeq ($(CONFIG_ARCH_LAHAINA), y)
-include $(CAMERA_KERNEL_ROOT)/config/lahaina.mk
+include $(srctree)/techpack/camera/config/lahaina.mk
 endif
 
 ifeq ($(CONFIG_ARCH_KONA), y)
-include $(CAMERA_KERNEL_ROOT)/config/kona.mk
+include $(srctree)/techpack/camera/config/kona.mk
 endif
 
 ifeq ($(CONFIG_ARCH_BENGAL), y)
-include $(CAMERA_KERNEL_ROOT)/config/holi.mk
+include $(srctree)/techpack/camera/config/holi.mk
 endif
 
 ifeq ($(CONFIG_ARCH_HOLI), y)
-include $(CAMERA_KERNEL_ROOT)/config/holi.mk
+include $(srctree)/techpack/camera/config/holi.mk
 endif
 
 ifeq ($(CONFIG_ARCH_LITO), y)
-include $(CAMERA_KERNEL_ROOT)/config/lito.mk
+include $(srctree)/techpack/camera/config/lito.mk
 endif
 
 ifeq ($(CONFIG_ARCH_SHIMA), y)
-include $(CAMERA_KERNEL_ROOT)/config/shima.mk
+include $(srctree)/techpack/camera/config/shima.mk
 endif
 
 ifeq ($(CONFIG_ARCH_DIWALI), y)
-include $(CAMERA_KERNEL_ROOT)/config/diwali.mk
+include $(srctree)/techpack/camera/config/diwali.mk
 endif
 
 ifeq ($(CONFIG_ARCH_CAPE), y)
-include $(CAMERA_KERNEL_ROOT)/config/cape.mk
+include $(srctree)/techpack/camera/config/cape.mk
 endif
 
 ifeq ($(CONFIG_ARCH_PARROT), y)
-include $(CAMERA_KERNEL_ROOT)/config/parrot.mk
+include $(srctree)/techpack/camera/config/parrot.mk
 endif
 
 # List of all camera-kernel headers
-cam_include_dirs := $(shell dirname `find $(CAMERA_KERNEL_ROOT) -name '*.h'` | uniq)
+cam_include_dirs := $(shell dirname `find $(srctree)/techpack/camera -name '*.h'` | uniq)
 
 # Include UAPI headers
 USERINCLUDE +=                              \
-	-I$(CAMERA_KERNEL_ROOT)/include/uapi/
+	-I$(srctree)/techpack/camera/include/uapi/
 # Include Kernel headers
 LINUXINCLUDE +=                                 \
 	-I$(KERNEL_ROOT)                            \
 	$(addprefix -I,$(cam_include_dirs))         \
-	-I$(CAMERA_KERNEL_ROOT)/include/uapi/camera \
-	-I$(CAMERA_KERNEL_ROOT)/
+	-I$(srctree)/techpack/camera/include/uapi/camera \
+	-I$(srctree)/techpack/camera/
 # Optional include directories
-ccflags-$(CONFIG_MSM_GLOBAL_SYNX) += -I$(KERNEL_ROOT)/drivers/media/platform/msm/synx
+ccflags-$(CONFIG_MSM_GLOBAL_SYNX) += -I$(srctree)/drivers/media/platform/msm/synx
 
 # After creating lists, add content of 'ccflags-m' variable to 'ccflags-y' one.
 ccflags-y += ${ccflags-m}
