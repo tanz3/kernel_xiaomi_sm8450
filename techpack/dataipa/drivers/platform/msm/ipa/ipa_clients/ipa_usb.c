@@ -15,6 +15,53 @@
 #include "ipa_i.h"
 #include "ipa_rm_i.h"
 
+inline int ipa_mpm_init(void)
+{
+	return 0;
+}
+inline void ipa_mpm_exit(void)
+{
+	return;
+}
+inline int ipa_mpm_mhip_xdci_pipe_enable(
+	enum ipa_usb_teth_prot prot)
+{
+	return 0;
+}
+inline int ipa_mpm_mhip_xdci_pipe_disable(
+	enum ipa_usb_teth_prot xdci_teth_prot)
+{
+	return 0;
+}
+inline int ipa_mpm_notify_wan_state(
+	struct wan_ioctl_notify_wan_state *state)
+{
+	return 0;
+}
+inline int ipa3_is_mhip_offload_enabled(void)
+{
+	return 0;
+}
+inline int ipa_mpm_reset_dma_mode(enum ipa_client_type src_pipe,
+	enum ipa_client_type dst_pipe)
+{
+	return 0;
+}
+inline int ipa_mpm_panic_handler(char *buf, int size)
+{
+	return 0;
+}
+
+inline int ipa3_get_mhip_gsi_stats(struct ipa_uc_dbg_ring_stats *stats)
+{
+	return 0;
+}
+
+inline int ipa3_mpm_enable_adpl_over_odl(bool enable)
+{
+	return 0;
+}
+
 #define IPA_USB_DEV_READY_TIMEOUT_MSEC 10000
 
 /* GSI channels weights */
