@@ -11,6 +11,11 @@
 #include <soc/qcom/sysmon.h>
 #include "esoc-mdm.h"
 
+inline int coresight_cti_pulse_trig(struct coresight_cti *cti, int ch)
+{
+	return -ENODEV;
+}
+
 enum gpio_update_config {
 	GPIO_UPDATE_BOOTING_CONFIG = 1,
 	GPIO_UPDATE_RUNNING_CONFIG,
