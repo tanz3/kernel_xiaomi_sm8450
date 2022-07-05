@@ -49,7 +49,7 @@
 				"", __func__, ##__VA_ARGS__); \
 } while (0)
 
-const char * const mhi_log_level_str[MHI_MSG_LVL_MAX] = {
+const char * const mhi_netdev_log_level_str[MHI_MSG_LVL_MAX] = {
 	[MHI_MSG_LVL_VERBOSE] = "Verbose",
 	[MHI_MSG_LVL_INFO] = "Info",
 	[MHI_MSG_LVL_ERROR] = "Error",
@@ -57,8 +57,8 @@ const char * const mhi_log_level_str[MHI_MSG_LVL_MAX] = {
 	[MHI_MSG_LVL_MASK_ALL] = "Mask all",
 };
 #define MHI_NETDEV_LOG_LEVEL_STR(level) ((level >= MHI_MSG_LVL_MAX || \
-					 !mhi_log_level_str[level]) ? \
-					 "Mask all" : mhi_log_level_str[level])
+					 !mhi_netdev_log_level_str[level]) ? \
+					 "Mask all" : mhi_netdev_log_level_str[level])
 
 struct mhi_net_chain {
 	struct sk_buff *head, *tail; /* chained skb */
@@ -919,7 +919,7 @@ static void mhi_netdev_create_debugfs_dir(void)
 
 #endif
 
-static ssize_t log_level_show(struct device *dev,
+static ssize_t netdev_log_level_show(struct device *dev,
 			      struct device_attribute *attr,
 			      char *buf)
 {
@@ -934,7 +934,7 @@ static ssize_t log_level_show(struct device *dev,
 			 MHI_NETDEV_LOG_LEVEL_STR(mhi_netdev->msg_lvl));
 }
 
-static ssize_t log_level_store(struct device *dev,
+static ssize_t netdev_log_level_store(struct device *dev,
 			       struct device_attribute *attr,
 			       const char *buf,
 			       size_t count)
@@ -962,10 +962,10 @@ static ssize_t log_level_store(struct device *dev,
 
 	return count;
 }
-static DEVICE_ATTR_RW(log_level);
+static DEVICE_ATTR_RW(netdev_log_level);
 
 static struct attribute *mhi_netdev_attrs[] = {
-	&dev_attr_log_level.attr,
+	&dev_attr_netdev_log_level.attr,
 	NULL,
 };
 
