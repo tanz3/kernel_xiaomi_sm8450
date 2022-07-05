@@ -12,7 +12,6 @@
 #include <linux/module.h>
 #include <linux/notifier.h>
 #include <linux/remoteproc.h>
-#include <linux/rpmsg/qcom_glink.h>
 #include <linux/rpmsg/qcom_smd.h>
 #include <linux/slab.h>
 #include <linux/soc/qcom/mdt_loader.h>
@@ -39,6 +38,42 @@
 #define MD_REGION_VALID		('V' << 24 | 'A' << 16 | 'L' << 8 | 'I' << 0)
 #define MD_SS_ENCR_DONE		('D' << 24 | 'O' << 16 | 'N' << 8 | 'E' << 0)
 #define MD_SS_ENABLED		('E' << 24 | 'N' << 16 | 'B' << 8 | 'L' << 0)
+
+struct qcom_glink;
+
+#if IS_ENABLED(CONFIG_RPMSG_QCOM_GLINK_SMEM)
+
+struct qcom_glink *qcom_glink_smem_register(struct device *parent,
+					    struct device_node *node);
+void qcom_glink_smem_unregister(struct qcom_glink *glink);
+void qcom_glink_ssr_notify(const char *ssr_name);
+int qcom_glink_smem_start(struct qcom_glink *glink);
+bool qcom_glink_is_wakeup(bool reset);
+void qcom_glink_early_ssr_notify(void *data);
+
+#else
+
+static inline struct qcom_glink *
+qcom_glink_smem_register(struct device *parent,
+			 struct device_node *node)
+{
+	return NULL;
+}
+
+static inline void qcom_glink_smem_unregister(struct qcom_glink *glink) {}
+static inline void qcom_glink_ssr_notify(const char *ssr_name) {}
+static inline void qcom_glink_early_ssr_notify(void *data) {}
+
+int qcom_glink_smem_start(struct qcom_glink *glink)
+{
+	return -ENXIO;
+}
+
+static inline bool qcom_glink_is_wakeup(bool reset)
+{
+	return false;
+}
+#endif
 
 /**
  * struct minidump_region - Minidump region

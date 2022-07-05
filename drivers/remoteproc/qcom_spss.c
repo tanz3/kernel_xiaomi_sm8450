@@ -19,7 +19,6 @@
 #include <linux/regulator/consumer.h>
 #include <linux/remoteproc.h>
 #include <linux/remoteproc/qcom_spss.h>
-#include <linux/rpmsg/qcom_glink.h>
 #include <linux/soc/qcom/mdt_loader.h>
 
 #include "qcom_common.h"
@@ -35,6 +34,62 @@
 #define PBL_LOG_MASK                  (0xff000000)
 
 #define to_glink_subdev(d) container_of(d, struct qcom_rproc_glink, subdev)
+
+struct qcom_glink;
+
+#if IS_ENABLED(CONFIG_RPMSG_QCOM_GLINK_SMEM)
+
+struct qcom_glink *qcom_glink_smem_register(struct device *parent,
+					    struct device_node *node);
+void qcom_glink_smem_unregister(struct qcom_glink *glink);
+void qcom_glink_ssr_notify(const char *ssr_name);
+int qcom_glink_smem_start(struct qcom_glink *glink);
+bool qcom_glink_is_wakeup(bool reset);
+void qcom_glink_early_ssr_notify(void *data);
+
+#else
+
+static inline struct qcom_glink *
+qcom_glink_smem_register(struct device *parent,
+			 struct device_node *node)
+{
+	return NULL;
+}
+
+static inline void qcom_glink_smem_unregister(struct qcom_glink *glink) {}
+static inline void qcom_glink_ssr_notify(const char *ssr_name) {}
+static inline void qcom_glink_early_ssr_notify(void *data) {}
+
+int qcom_glink_smem_start(struct qcom_glink *glink)
+{
+	return -ENXIO;
+}
+
+static inline bool qcom_glink_is_wakeup(bool reset)
+{
+	return false;
+}
+#endif
+
+#if IS_ENABLED(CONFIG_RPMSG_QCOM_GLINK_SPSS)
+
+struct qcom_glink *qcom_glink_spss_register(struct device *parent,
+					    struct device_node *node);
+void qcom_glink_spss_unregister(struct qcom_glink *glink);
+int qcom_glink_spss_start(struct qcom_glink *glink);
+
+#else
+
+static inline struct qcom_glink *
+qcom_glink_spss_register(struct device *parent,
+			 struct device_node *node)
+{
+	return NULL;
+}
+
+static inline void qcom_glink_spss_unregister(struct qcom_glink *glink) {}
+
+#endif
 
 struct spss_data {
 	const char *firmware_name;
