@@ -33,7 +33,7 @@ endif
 ifeq ($(CONFIG_ARCH_WAIPIO), y)
 DATAIPADRVTOP = $(srctree)/techpack/dataipa/drivers/platform/msm
 LINUXINCLUDE    += -include $(srctree)/techpack/dataipa/config/dataipa_vendor.h
-include $(srctree)/techpack/dataipa/config/dataipa_GKI.conf
+include $(srctree)/techpack/dataipa/config/dataipa_QGKI.conf
 ifeq ($(CONFIG_LOCALVERSION), "-gki-consolidate")
 include $(srctree)/techpack/dataipa/config/dataipa_debug.conf
 LINUXINCLUDE    += -include $(srctree)/techpack/dataipa/config/dataipa_debug.h
