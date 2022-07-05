@@ -7,7 +7,6 @@
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/rpmsg.h>
-#include <linux/rpmsg/qcom_glink.h>
 #include <linux/of.h>
 
 #include "qrtr.h"
@@ -38,9 +37,6 @@ static int qcom_smd_qrtr_callback(struct rpmsg_device *rpdev,
 		/* return 0 to let smd drop the packet */
 		rc = 0;
 	}
-
-	if (qcom_glink_is_wakeup(true))
-		qrtr_print_wakeup_reason(data);
 
 	return rc;
 }
