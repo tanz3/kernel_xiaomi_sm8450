@@ -22,8 +22,6 @@
 #include <linux/workqueue.h>
 #include <linux/list.h>
 
-#include <linux/rpmsg/qcom_glink.h>
-
 #include "qcom_glink_native.h"
 
 #define FIFO_FULL_RESERVE 8
@@ -33,6 +31,63 @@
 #define SMEM_GLINK_NATIVE_XPRT_DESCRIPTOR	478
 #define SMEM_GLINK_NATIVE_XPRT_FIFO_0		479
 #define SMEM_GLINK_NATIVE_XPRT_FIFO_1		480
+
+struct qcom_glink;
+
+#if IS_ENABLED(CONFIG_RPMSG_QCOM_GLINK_SMEM)
+
+struct qcom_glink *qcom_glink_smem_register(struct device *parent,
+					    struct device_node *node);
+void qcom_glink_smem_unregister(struct qcom_glink *glink);
+void qcom_glink_ssr_notify(const char *ssr_name);
+int qcom_glink_smem_start(struct qcom_glink *glink);
+bool qcom_glink_is_wakeup(bool reset);
+void qcom_glink_early_ssr_notify(void *data);
+
+#else
+
+static inline struct qcom_glink *
+qcom_glink_smem_register(struct device *parent,
+			 struct device_node *node)
+{
+	return NULL;
+}
+
+static inline void qcom_glink_smem_unregister(struct qcom_glink *glink) {}
+static inline void qcom_glink_ssr_notify(const char *ssr_name) {}
+static inline void qcom_glink_early_ssr_notify(void *data) {}
+
+int qcom_glink_smem_start(struct qcom_glink *glink)
+{
+	return -ENXIO;
+}
+
+static inline bool qcom_glink_is_wakeup(bool reset)
+{
+	return false;
+}
+#endif
+
+
+#if IS_ENABLED(CONFIG_RPMSG_QCOM_GLINK_SPSS)
+
+struct qcom_glink *qcom_glink_spss_register(struct device *parent,
+					    struct device_node *node);
+void qcom_glink_spss_unregister(struct qcom_glink *glink);
+int qcom_glink_spss_start(struct qcom_glink *glink);
+
+#else
+
+static inline struct qcom_glink *
+qcom_glink_spss_register(struct device *parent,
+			 struct device_node *node)
+{
+	return NULL;
+}
+
+static inline void qcom_glink_spss_unregister(struct qcom_glink *glink) {}
+
+#endif
 
 struct glink_smem_pipe {
 	struct qcom_glink_pipe native;
