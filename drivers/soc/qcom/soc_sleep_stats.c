@@ -106,7 +106,7 @@ struct appended_stats {
 };
 
 struct ddr_stats_g_data *ddr_gdata;
-bool ddr_freq_update;
+bool soc_ddr_freq_update;
 ktime_t send_msg_time;
 
 #ifdef CONFIG_MI_POWER_INFO_MODULE
@@ -207,7 +207,7 @@ static void  print_ddr_stats(struct seq_file *s, int *count,
 
 static bool ddr_stats_is_freq_overtime(struct stats_entry *data)
 {
-	if ((data->count == 0) && (ddr_freq_update))
+	if ((data->count == 0) && (soc_ddr_freq_update))
 		return true;
 
 	return false;
@@ -569,7 +569,7 @@ static int soc_sleep_stats_probe(struct platform_device *pdev)
 
 	ddr_gdata->read_vote_info = true;
 
-	ddr_freq_update = of_property_read_bool(pdev->dev.of_node,
+	soc_ddr_freq_update = of_property_read_bool(pdev->dev.of_node,
 							"ddr-freq-update");
 
 skip_ddr_stats:
