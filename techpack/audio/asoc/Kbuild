@@ -213,6 +213,14 @@ CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
 		-Werror\
 		-D__linux__
 
+ifdef CONFIG_MACH_ZEUS
+	CDEFINES += -DCONFIG_TARGET_PRODUCT_ZEUS
+endif
+
+ifdef CONFIG_MACH_CUPID
+	CDEFINES += -DCONFIG_TARGET_PRODUCT_CUPID
+endif
+
 KBUILD_CPPFLAGS += $(CDEFINES)
 
 # Currently, for versions of gcc which support it, the kernel Makefile
