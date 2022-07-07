@@ -417,4 +417,30 @@ config ARCH_ZYNQMP
 	help
 	  This enables support for Xilinx ZynqMP Family
 
+menu "Xiaomi Family"
+config MACH_XIAOMI
+	bool "Xiaomi Family"
+	help
+	  This enables support for XiaoMi Family devices.
+
+if MACH_XIAOMI
+config MACH_XIAOMI_SM8450
+	bool "Xiaomi SM8450 platform devices"
+	select ARCH_QCOM
+	select ARCH_WAIPIO
+
+config MACH_CUPID
+	bool "Cupid platform"
+	select MACH_XIAOMI_SM8450
+	help
+	  This enables support for Xiaomi 12.
+
+config MACH_ZEUS
+	bool "Zeus platform"
+	select MACH_XIAOMI_SM8450
+	help
+	  This enables support for Xiaomi 12 Pro.
+
+endif
+endmenu
 endmenu
