@@ -360,7 +360,10 @@ CONFIG_ARCH_SPRD=y
 #
 # Xiaomi Family
 #
-# CONFIG_MACH_XIAOMI is not set
+CONFIG_MACH_XIAOMI=y
+CONFIG_MACH_XIAOMI_SM8450=y
+# CONFIG_MACH_CUPID is not set
+CONFIG_MACH_ZEUS=y
 # end of Xiaomi Family
 # end of Platform selection
 
